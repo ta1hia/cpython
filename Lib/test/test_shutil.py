@@ -1505,7 +1505,10 @@ class TestShutil(unittest.TestCase):
         # cleaned-up automatically by TestShutil.tearDown method
         dirname = self.mkdtemp()
         filename = tempfile.mktemp(dir=dirname)
+        linkname = os.path.join(dirname, "chown_link")
+        dirfd = os.open(dirname, os.O_RDONLY)
         write_file(filename, 'testing chown function')
+        os.symlink(filename, linkname)
 
         with self.assertRaises(ValueError):
             shutil.chown(filename)
@@ -1526,7 +1529,7 @@ class TestShutil(unittest.TestCase):
         gid = os.getgid()
 
         def check_chown(path, uid=None, gid=None):
-            s = os.stat(filename)
+            s = os.stat(path)
             if uid is not None:
                 self.assertEqual(uid, s.st_uid)
             if gid is not None:
@@ -1556,6 +1559,35 @@ class TestShutil(unittest.TestCase):
         check_chown(filename, uid, gid)
         shutil.chown(dirname, user, group)
         check_chown(dirname, uid, gid)
+
+        basename = os.path.basename(filename)
+        baselinkname = os.path.basename(linkname)
+        shutil.chown(basename, uid, gid, dir_fd=dirfd)
+        check_chown(filename, uid, gid)
+        shutil.chown(basename, uid, dir_fd=dirfd)
+        check_chown(filename, uid)
+        shutil.chown(basename, group=gid, dir_fd=dirfd)
+        check_chown(filename, gid=gid)
+        shutil.chown(basename, uid, gid, dir_fd=dirfd, follow_symlinks=True)
+        check_chown(filename, uid, gid)
+        shutil.chown(basename, uid, gid, dir_fd=dirfd, follow_symlinks=False)
+        check_chown(filename, uid, gid)
+        shutil.chown(linkname, uid, follow_symlinks=True)
+        check_chown(filename, uid)
+        shutil.chown(baselinkname, group=gid, dir_fd=dirfd, follow_symlinks=False)
+        check_chown(filename, gid=gid)
+        shutil.chown(baselinkname, uid, gid, dir_fd=dirfd, follow_symlinks=True)
+        check_chown(filename, uid, gid)
+
+        with self.assertRaises(TypeError):
+            shutil.chown(filename, uid, dir_fd=dirname)
+
+        with self.assertRaises(FileNotFoundError):
+            shutil.chown('missingfile', uid, gid, dir_fd=dirfd)
+
+        with self.assertRaises(ValueError):
+            shutil.chown(filename, dir_fd=dirfd)
+
 
     def test_copy_return_value(self):
         # copy and copy2 both return their destination path.

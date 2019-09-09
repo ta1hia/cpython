@@ -368,7 +368,8 @@ Directory and files operations
 
    .. availability:: Unix, Windows.
 
-.. function:: chown(path, user=None, group=None)
+.. function:: chown(path, user=None, group=None, dir_fd=None, \
+                    follow_symlinks=True)
 
    Change owner *user* and/or *group* of the given *path*.
 
@@ -380,6 +381,9 @@ Directory and files operations
    .. availability:: Unix.
 
    .. versionadded:: 3.3
+
+   .. versionchanged:: 3.9
+     Added *dir_fd* and *follow_symlinks* parameters.
 
 
 .. function:: which(cmd, mode=os.F_OK | os.X_OK, path=None)
