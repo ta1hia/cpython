@@ -1249,13 +1249,14 @@ elif _WINDOWS:
         return _ntuple_diskusage(total, used, free)
 
 
-def chown(path, user=None, group=None, dir_fd=None, follow_symlinks=True):
+def chown(path, user=None, group=None, *, dir_fd=None, follow_symlinks=True):
     """Change owner user and group of the given path.
 
     user and group can be the uid/gid or the user/group names, and in that case,
     they are converted to their respective uid/gid.
 
-    If dir_fd is set, it should be an open file descriptor to a directory.
+    If dir_fd is set, it should be an open file descriptor to the directory to
+    be used as the root of *path* if it is relative.
 
     If follow_symlinks is set to False and the last element of the path is a
     symbolic link, chown will modify the link itself and not the file being
